@@ -1,6 +1,6 @@
 # KindlePool — Remaining Work & Server-Deletion Checklist
 
-Last updated: 2026-08-01 · Repo: `abbasiwa/kindlepool` (branch `main`, HEAD `daafd22`) · Pushes as `mikwansa <nekwasar@moistello.com>`
+Last updated: 2026-08-14 · Repo: `nekwasar/kindlepool-api` (split from `abbasiwa/kindlepool`, Phase 0) · Frontend: `nekwasar/kindlepool-web`
 
 ---
 

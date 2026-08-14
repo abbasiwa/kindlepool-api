@@ -9,8 +9,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_TOOLCHAIN: stable
-  WASM_TARGET: wasm32-unknown-unknown
-  SOROBAN_RPC_URL: ${{ vars.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org' }}
+  WASM_TARGET: wasm32v1-none
 
 jobs:
   # ── Lint ──────────────────────────────────────────────────────
@@ -26,12 +25,8 @@ jobs:
           components: clippy, rustfmt
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: |
-            web/package-lock.json
-            services/indexer/package-lock.json
-            services/relayer/package-lock.json
 
       - name: Rust lint
         run: cargo clippy --workspace --target ${{ env.WASM_TARGET }} --release -- -D warnings
@@ -39,22 +34,34 @@ jobs:
       - name: Rust format check
         run: cargo fmt --check
 
-      - name: Web lint
-        working-directory: web
-        run: |
-          npm install --frozen-lockfile
-          npx tsc --noEmit
-
-      - name: Service lint
+      - name: Service typecheck (indexer)
         working-directory: services/indexer
         run: |
-          npm install --frozen-lockfile
+          npm install
           npx tsc --noEmit
 
-      - name: SDK lint
+      - name: Service typecheck (relayer)
+        working-directory: services/relayer
+        run: |
+          npm install
+          npx tsc --noEmit
+
+      - name: Service typecheck (notifier)
+        working-directory: services/notifier
+        run: |
+          npm install
+          npx tsc --noEmit
+
+      - name: Service typecheck (monitor)
+        working-directory: services/monitor
+        run: |
+          npm install
+          npx tsc --noEmit
+
+      - name: SDK typecheck
         working-directory: packages/sdk
         run: |
-          npm install --frozen-lockfile
+          npm install
           npx tsc --noEmit
 
   # ── Test ──────────────────────────────────────────────────────
@@ -70,31 +77,35 @@ jobs:
           targets: ${{ env.WASM_TARGET }}
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
-          cache-dependency-path: |
-            web/package-lock.json
 
-      - name: Contract unit tests
-        run: cargo test -p sponsor-pool --features testutils 2>/dev/null || echo "Testutils not available — skipping"
+      - name: Contract unit + proptest
+        run: cargo test -p sponsor-pool --lib
 
-      - name: Web build test
-        working-directory: web
-        run: |
-          npm install --frozen-lockfile
-          npm run build
-
-      - name: Indexer build test
+      - name: Indexer tests (vitest)
         working-directory: services/indexer
         run: |
-          npm install --frozen-lockfile
-          npm run build
+          npm install
+          npm test
 
-      - name: Relayer build test
+      - name: Relayer tests (vitest)
         working-directory: services/relayer
         run: |
-          npm install --frozen-lockfile
-          npx tsc --noEmit
+          npm install
+          npm test
+
+      - name: Notifier tests (vitest)
+        working-directory: services/notifier
+        run: |
+          npm install
+          npm test
+
+      - name: Monitor tests (vitest)
+        working-directory: services/monitor
+        run: |
+          npm install
+          npm test
 
   # ── Build WASM ────────────────────────────────────────────────
   build-wasm:
@@ -109,11 +120,11 @@ jobs:
           targets: ${{ env.WASM_TARGET }}
 
       - name: Build contract (WASM release)
-        run: cargo build -p sponsor-pool --target wasm32v1-none --release
+        run: cargo build -p sponsor-pool --target ${{ env.WASM_TARGET }} --release
 
       - name: Check WASM size
         run: |
-          WASM_FILE="target/wasm32v1-none/release/sponsor_pool.wasm"
+          WASM_FILE="target/${{ env.WASM_TARGET }}/release/sponsor_pool.wasm"
           if [ -f "$WASM_FILE" ]; then
             SIZE=$(wc -c < "$WASM_FILE")
             echo "WASM size: $SIZE bytes ($(( SIZE / 1024 )) KB)"
@@ -144,19 +155,18 @@ jobs:
       - name: Build WASM
         run: cargo build -p sponsor-pool --target ${{ env.WASM_TARGET }} --release
 
-      - name: Install soroban-cli
-        run: cargo install soroban-cli --locked 2>/dev/null || echo "soroban-cli already installed"
+      - name: Install stellar-cli
+        run: cargo install stellar-cli --locked 2>/dev/null || echo "stellar-cli already installed"
 
       - name: Deploy contract
         env:
           SOROBAN_SECRET_KEY: ${{ secrets.SOROBAN_SECRET_KEY }}
         run: |
-          soroban contract deploy \
+          echo "$SOROBAN_SECRET_KEY" | stellar keys add deployer --secret-key
+          stellar contract deploy \
             --wasm target/${{ env.WASM_TARGET }}/release/sponsor_pool.wasm \
-            --source <(echo "$SOROBAN_SECRET_KEY") \
-            --rpc-url ${{ env.SOROBAN_RPC_URL }} \
-            --network-passphrase "Test SDF Network ; September 2015" \
-            --fee 100
+            --source-account deployer \
+            --network testnet
 
   deploy-mainnet:
     name: Deploy → Mainnet
@@ -174,13 +184,15 @@ jobs:
       - name: Build WASM
         run: cargo build -p sponsor-pool --target ${{ env.WASM_TARGET }} --release
 
+      - name: Install stellar-cli
+        run: cargo install stellar-cli --locked 2>/dev/null || echo "stellar-cli already installed"
+
       - name: Deploy contract
         env:
           SOROBAN_SECRET_KEY: ${{ secrets.SOROBAN_SECRET_KEY }}
         run: |
-          soroban contract deploy \
+          echo "$SOROBAN_SECRET_KEY" | stellar keys add deployer --secret-key
+          stellar contract deploy \
             --wasm target/${{ env.WASM_TARGET }}/release/sponsor_pool.wasm \
-            --source <(echo "$SOROBAN_SECRET_KEY") \
-            --rpc-url https://soroban.stellar.org \
-            --network-passphrase "Public Global Stellar Network ; September 2015" \
-            --fee 100
+            --source-account deployer \
+            --network mainnet
