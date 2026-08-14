@@ -1,4 +1,4 @@
-export type PoolStatus = 'open' | 'awaiting_vote' | 'paid' | 'expired' | 'disputed' | 'appealed'
+export type PoolStatus = 'open' | 'awaiting_vote' | 'paid' | 'expired' | 'disputed' | 'appealed' | 'cancelled'
 
 export interface PoolData {
   id: number
@@ -91,4 +91,19 @@ export interface VoteParams {
   pool_id: number
   voter: string
   approve: boolean
+}
+
+export interface RaiseDisputeParams {
+  pool_id: number
+  disputant: string
+  reason: number
+  evidence_hash: string // hex-encoded bytes (without 0x prefix)
+}
+
+export interface ResolveDisputeParams {
+  pool_id: number
+  caller: string
+  dispute_id: number
+  vote_for_creator: boolean
+  reason_hash: string // hex-encoded bytes (without 0x prefix)
 }

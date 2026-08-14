@@ -1,6 +1,6 @@
 import {
   KindlePoolContract
-} from "./chunk-XJVLXZDT.mjs";
+} from "./chunk-S7LPDYW2.mjs";
 export {
   KindlePoolContract
 };

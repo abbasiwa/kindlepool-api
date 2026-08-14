@@ -1,7 +1,6 @@
 export { KindlePoolAPI } from './api.mjs';
 export { KindlePoolContract } from './contract.mjs';
-export { ArbitratorVoteData, CreatePoolParams, DepositParams, DisputeData, EventData, PaginatedResponse, PoolData, PoolListParams, PoolStatus, SupporterData, VoteParams } from './types.mjs';
-import '@stellar/stellar-sdk';
+export { ArbitratorVoteData, CreatePoolParams, DepositParams, DisputeData, EventData, PaginatedResponse, PoolData, PoolListParams, PoolStatus, RaiseDisputeParams, ResolveDisputeParams, SupporterData, VoteParams } from './types.mjs';
 
 declare const VERSION = "0.1.0";
 

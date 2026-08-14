@@ -1,4 +1,4 @@
-type PoolStatus = 'open' | 'awaiting_vote' | 'paid' | 'expired' | 'disputed' | 'appealed';
+type PoolStatus = 'open' | 'awaiting_vote' | 'paid' | 'expired' | 'disputed' | 'appealed' | 'cancelled';
 interface PoolData {
     id: number;
     contract_id: string;
@@ -82,5 +82,18 @@ interface VoteParams {
     voter: string;
     approve: boolean;
 }
+interface RaiseDisputeParams {
+    pool_id: number;
+    disputant: string;
+    reason: number;
+    evidence_hash: string;
+}
+interface ResolveDisputeParams {
+    pool_id: number;
+    caller: string;
+    dispute_id: number;
+    vote_for_creator: boolean;
+    reason_hash: string;
+}
 
-export type { ArbitratorVoteData, CreatePoolParams, DepositParams, DisputeData, EventData, PaginatedResponse, PoolData, PoolListParams, PoolStatus, SupporterData, VoteParams };
+export type { ArbitratorVoteData, CreatePoolParams, DepositParams, DisputeData, EventData, PaginatedResponse, PoolData, PoolListParams, PoolStatus, RaiseDisputeParams, ResolveDisputeParams, SupporterData, VoteParams };

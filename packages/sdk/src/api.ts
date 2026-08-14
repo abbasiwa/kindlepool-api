@@ -1,13 +1,14 @@
 import type { PoolData, SupporterData, EventData, PaginatedResponse, PoolListParams } from './types'
 
-const BASE_URL = 'https://api.kindlepool.dev'
+const DEFAULT_BASE_URL = 'https://kindlepool-api.herokuapp.com'
 
 export class KindlePoolAPI {
   private baseUrl: string
   private apiKey?: string
 
   constructor(options?: { baseUrl?: string; apiKey?: string }) {
-    this.baseUrl = options?.baseUrl ?? BASE_URL
+    const envUrl = typeof process !== 'undefined' && process.env?.KINDPOOL_API_URL ? process.env.KINDPOOL_API_URL : undefined
+    this.baseUrl = options?.baseUrl ?? envUrl ?? DEFAULT_BASE_URL
     this.apiKey = options?.apiKey
   }
 
@@ -17,8 +18,9 @@ export class KindlePoolAPI {
     return h
   }
 
+  // All indexer endpoints live under /api/v1 (audit #10).
   private async fetch<T>(path: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(`${this.baseUrl}${path}`, { ...init, headers: { ...this.headers, ...init?.headers } })
+    const res = await fetch(`${this.baseUrl}/api/v1${path}`, { ...init, headers: { ...this.headers, ...init?.headers } })
     if (!res.ok) {
       const body = await res.text()
       throw new Error(`KindlePool API ${res.status}: ${body}`)

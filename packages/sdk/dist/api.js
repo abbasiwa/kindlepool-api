@@ -23,12 +23,13 @@ __export(api_exports, {
   KindlePoolAPI: () => KindlePoolAPI
 });
 module.exports = __toCommonJS(api_exports);
-var BASE_URL = "https://api.kindlepool.dev";
+var DEFAULT_BASE_URL = "https://kindlepool-api.herokuapp.com";
 var KindlePoolAPI = class {
   baseUrl;
   apiKey;
   constructor(options) {
-    this.baseUrl = options?.baseUrl ?? BASE_URL;
+    const envUrl = typeof process !== "undefined" && process.env?.KINDPOOL_API_URL ? process.env.KINDPOOL_API_URL : void 0;
+    this.baseUrl = options?.baseUrl ?? envUrl ?? DEFAULT_BASE_URL;
     this.apiKey = options?.apiKey;
   }
   get headers() {
@@ -36,8 +37,9 @@ var KindlePoolAPI = class {
     if (this.apiKey) h["X-API-Key"] = this.apiKey;
     return h;
   }
+  // All indexer endpoints live under /api/v1 (audit #10).
   async fetch(path, init) {
-    const res = await fetch(`${this.baseUrl}${path}`, { ...init, headers: { ...this.headers, ...init?.headers } });
+    const res = await fetch(`${this.baseUrl}/api/v1${path}`, { ...init, headers: { ...this.headers, ...init?.headers } });
     if (!res.ok) {
       const body = await res.text();
       throw new Error(`KindlePool API ${res.status}: ${body}`);
