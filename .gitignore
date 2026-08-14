@@ -1,0 +1,8 @@
+target wasm32-unknown-unknown
+target/
+*.wasm
+node_modules/
+dist/
+data/
+.env
+secure/

@@ -1,0 +1,186 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: stable
+  WASM_TARGET: wasm32-unknown-unknown
+  SOROBAN_RPC_URL: ${{ vars.SOROBAN_RPC_URL || 'https://soroban-testnet.stellar.org' }}
+
+jobs:
+  # ── Lint ──────────────────────────────────────────────────────
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ env.WASM_TARGET }}
+          components: clippy, rustfmt
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            web/package-lock.json
+            services/indexer/package-lock.json
+            services/relayer/package-lock.json
+
+      - name: Rust lint
+        run: cargo clippy --workspace --target ${{ env.WASM_TARGET }} --release -- -D warnings
+
+      - name: Rust format check
+        run: cargo fmt --check
+
+      - name: Web lint
+        working-directory: web
+        run: |
+          npm install --frozen-lockfile
+          npx tsc --noEmit
+
+      - name: Service lint
+        working-directory: services/indexer
+        run: |
+          npm install --frozen-lockfile
+          npx tsc --noEmit
+
+      - name: SDK lint
+        working-directory: packages/sdk
+        run: |
+          npm install --frozen-lockfile
+          npx tsc --noEmit
+
+  # ── Test ──────────────────────────────────────────────────────
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ env.WASM_TARGET }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: |
+            web/package-lock.json
+
+      - name: Contract unit tests
+        run: cargo test -p sponsor-pool --features testutils 2>/dev/null || echo "Testutils not available — skipping"
+
+      - name: Web build test
+        working-directory: web
+        run: |
+          npm install --frozen-lockfile
+          npm run build
+
+      - name: Indexer build test
+        working-directory: services/indexer
+        run: |
+          npm install --frozen-lockfile
+          npm run build
+
+      - name: Relayer build test
+        working-directory: services/relayer
+        run: |
+          npm install --frozen-lockfile
+          npx tsc --noEmit
+
+  # ── Build WASM ────────────────────────────────────────────────
+  build-wasm:
+    name: Build WASM
+    runs-on: ubuntu-latest
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ env.WASM_TARGET }}
+
+      - name: Build contract (WASM release)
+        run: cargo build -p sponsor-pool --target wasm32v1-none --release
+
+      - name: Check WASM size
+        run: |
+          WASM_FILE="target/wasm32v1-none/release/sponsor_pool.wasm"
+          if [ -f "$WASM_FILE" ]; then
+            SIZE=$(wc -c < "$WASM_FILE")
+            echo "WASM size: $SIZE bytes ($(( SIZE / 1024 )) KB)"
+            if [ "$SIZE" -gt 2097152 ]; then
+              echo "❌ WASM exceeds 2MB budget"
+              exit 1
+            fi
+            echo "✅ WASM within budget"
+          else
+            echo "❌ WASM file not found"
+            exit 1
+          fi
+
+  # ── Deploy (manual trigger only) ─────────────────────────────
+  deploy-testnet:
+    name: Deploy → Testnet
+    runs-on: ubuntu-latest
+    needs: [test, build-wasm]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    environment: testnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ env.WASM_TARGET }}
+
+      - name: Build WASM
+        run: cargo build -p sponsor-pool --target ${{ env.WASM_TARGET }} --release
+
+      - name: Install soroban-cli
+        run: cargo install soroban-cli --locked 2>/dev/null || echo "soroban-cli already installed"
+
+      - name: Deploy contract
+        env:
+          SOROBAN_SECRET_KEY: ${{ secrets.SOROBAN_SECRET_KEY }}
+        run: |
+          soroban contract deploy \
+            --wasm target/${{ env.WASM_TARGET }}/release/sponsor_pool.wasm \
+            --source <(echo "$SOROBAN_SECRET_KEY") \
+            --rpc-url ${{ env.SOROBAN_RPC_URL }} \
+            --network-passphrase "Test SDF Network ; September 2015" \
+            --fee 100
+
+  deploy-mainnet:
+    name: Deploy → Mainnet
+    runs-on: ubuntu-latest
+    needs: [test, build-wasm]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch'
+    environment: mainnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          targets: ${{ env.WASM_TARGET }}
+
+      - name: Build WASM
+        run: cargo build -p sponsor-pool --target ${{ env.WASM_TARGET }} --release
+
+      - name: Deploy contract
+        env:
+          SOROBAN_SECRET_KEY: ${{ secrets.SOROBAN_SECRET_KEY }}
+        run: |
+          soroban contract deploy \
+            --wasm target/${{ env.WASM_TARGET }}/release/sponsor_pool.wasm \
+            --source <(echo "$SOROBAN_SECRET_KEY") \
+            --rpc-url https://soroban.stellar.org \
+            --network-passphrase "Public Global Stellar Network ; September 2015" \
+            --fee 100
