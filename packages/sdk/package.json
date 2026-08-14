@@ -1,5 +1,5 @@
 {
-  "name": "@nekwasar/kindlepool-sdk",
+  "name": "@mikwansa/kindlepool-sdk",
   "version": "0.1.0",
   "description": "TypeScript SDK for KindlePool — micro-sponsor pools on Stellar",
   "main": "dist/index.js",
