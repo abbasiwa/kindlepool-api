@@ -1,0 +1,4 @@
+# The SDK build output is COMMITTED so GitHub-tarball installs
+# (github:nekwasar/kindlepool-api#main:packages/sdk) resolve without
+# a build step. Regenerate with: npm run build
+!dist/
