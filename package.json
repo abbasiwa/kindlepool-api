@@ -1,0 +1,16 @@
+{
+  "name": "kindlepool-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "KindlePool unified backend workspace",
+  "workspaces": [
+    "api",
+    "services/*"
+  ],
+  "scripts": {
+    "build": "npm --workspace api run build",
+    "start": "node api/dist/api/src/index.js",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm test --workspaces --if-present"
+  }
+}

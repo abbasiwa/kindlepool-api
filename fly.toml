@@ -1,0 +1,30 @@
+# KindlePool unified backend on Fly.io (alternative to Heroku)
+# docs: https://fly.io/docs/reference/configuration/
+
+app = "kindlepool-api"
+
+[build]
+
+[env]
+  NODE_ENV = "production"
+  # set via `fly secrets set` in production:
+  #   fly secrets set KINDPOOL_CONTRACT_ID=... KINDPOOL_RELAYER_SECRET=... KINDPOOL_MONGO_URL=...
+
+[mounts]
+  source = "kindlepool_data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.checks]
+    [http_service.checks.health]
+      interval = "30s"
+      timeout = "5s"
+      grace_period = "15s"
+      method = "GET"
+      path = "/api/v1/health"
