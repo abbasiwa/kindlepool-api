@@ -27,7 +27,7 @@ Shared DNA across both: **fund the work, not the creator** · trustless on-chain
 | 3 | Database | **MongoDB Atlas M0** (free, 512 MB) as main persistent DB + **SQLite** hot cache on the dyno |
 | 4 | Repo structure | **2 repos**: `kindlepool-api` + `kindlepool-web` |
 | 5 | Contract location | `kindlepool-api/contracts/` (Rust, deploys to Soroban) |
-| 6 | SDK publishing | **GitHub-tarball install** (`github:nekwasar/kindlepool-api#vX:packages/sdk`) |
+| 6 | SDK publishing | **GitHub Packages npm registry** (`@nekwasar/kindlepool-sdk` via npm.pkg.github.com) |
 | 7 | Phase 0 order | **Split repo first** |
 | 8 | Docs strategy | **Separate webpages per `.md` file** — web reads the .md files at build time (never converts them) |
 | 9 | Auth | **Email-only magic-link**; wallet-link happens **in Settings** |
@@ -117,7 +117,7 @@ DESKTOP (> 768px container)
 
 ```
 contracts/sponsor-pool/      # Soroban Rust contract (CONTRACT_VERSION 5)
-packages/sdk/               # @kindlepool/sdk — TS wrappers over contract ABI + API
+packages/sdk/               # @nekwasar/kindlepool-sdk — TS wrappers over contract ABI + API
 services/                   # indexer, relayer, notifier, monitor (become modules)
 api/                        # unified backend entrypoint
   src/index.ts              # boots all services + mounts Express API
@@ -151,7 +151,7 @@ vercel.json · package.json · .env.example · .github/workflows/ci.yml
 
 ```json
 // kindlepool-web/package.json
-"@kindlepool/sdk": "github:nekwasar/kindlepool-api#v0.1.0:packages/sdk"
+"@nekwasar/kindlepool-sdk": "^0.1.0"  // via .npmrc scope → npm.pkg.github.com
 ```
 
 ---
@@ -282,7 +282,7 @@ Hub (`/c/:handle`) · single tag (`/c/:handle/:slug`) · embed generator · sign
 4. Set up CI on both repos
 
 ### Phase 1 — Web uses contracts (3–5 days)
-1. Add `@stellar/stellar-sdk` + `@kindlepool/sdk` to web
+1. Add `@stellar/stellar-sdk` + `@nekwasar/kindlepool-sdk` to web
 2. New `lib/contract.ts`, `lib/relayer.ts`, `lib/sdk.ts`
 3. Wire every product flow → real contract call (create, deposit, vote, submit_work, finalize, cancel_pool, claim_refund, raise_dispute, resolve_dispute, appeal_dispute)
 4. Fix audit issues #6–#10, #14
