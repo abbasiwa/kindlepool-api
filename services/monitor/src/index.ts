@@ -155,7 +155,7 @@ async function runCheck() {
   console.log(`[${new Date().toISOString()}] ${icon} RPC=${record.ledger} Indexer=${record.indexerStatus} Pools=${record.poolCount} ${record.latency}ms`)
 }
 
-function start() {
+export function startMonitor(): void {
   console.log('KindlePool Monitor started')
   console.log(`  Indexer: ${CONFIG.indexerUrl}`)
   console.log(`  Interval: ${CONFIG.checkInterval / 1000}s`)
@@ -164,4 +164,6 @@ function start() {
   setInterval(flushRetryQueue, 300 * 1000)
 }
 
-start()
+if (require.main === module) {
+  startMonitor()
+}

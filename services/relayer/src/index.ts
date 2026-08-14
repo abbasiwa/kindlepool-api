@@ -14,13 +14,6 @@ import {
 const app = express()
 const PORT = parseInt(process.env.KINDPOOL_RELAYER_PORT ?? '3002', 10)
 
-const RELAYER_SECRET = process.env.KINDPOOL_RELAYER_SECRET
-if (!RELAYER_SECRET) {
-  console.error('KINDPOOL_RELAYER_SECRET environment variable is required')
-  process.exit(1)
-}
-const relayerKeypair = Keypair.fromSecret(RELAYER_SECRET)
-
 const config: RelayConfig = {
   ...defaultRelayConfig(),
   rpcUrl: process.env.KINDPOOL_RPC_URL ?? 'https://soroban-testnet.stellar.org',
@@ -31,6 +24,8 @@ const config: RelayConfig = {
 }
 
 const server = new SorobanRpc.Server(config.rpcUrl)
+
+let relayerKeypair: Keypair | null = null
 
 app.use(cors())
 app.use(express.json({ limit: '100kb' }))
@@ -43,6 +38,10 @@ app.use(rateLimit({
 
 app.post('/api/v1/relay', async (req, res) => {
   try {
+    if (!relayerKeypair) {
+      res.status(503).json({ success: false, error: 'Relayer not configured (KINDPOOL_RELAYER_SECRET missing)' })
+      return
+    }
     const body = req.body ?? {}
     const validation = validateRequest(body, config)
     if (!validation.ok) {
@@ -64,6 +63,10 @@ app.post('/api/v1/relay', async (req, res) => {
 })
 
 app.get('/api/v1/health', async (_req, res) => {
+  if (!relayerKeypair) {
+    res.json({ status: 'degraded', relayer_address: null, balance: 'unconfigured' })
+    return
+  }
   try {
     const account = await server.getAccount(relayerKeypair.publicKey())
     const balance = (account as any).balances?.find((b: any) => b.asset_type === 'native')
@@ -81,10 +84,24 @@ app.get('/api/v1/health', async (_req, res) => {
   }
 })
 
-app.listen(PORT, () => {
-  console.log(`KindlePool Relayer running on port ${PORT}`)
-  console.log(`  Relayer address: ${relayerKeypair.publicKey()}`)
-  console.log(`  RPC: ${config.rpcUrl}`)
-  console.log(`  Network: ${config.networkPassphrase}`)
-  console.log(`  Allowlist: ${config.allowlist ? config.allowlist.length + ' addresses' : 'disabled (allow all)'}`)
-})
+export function startRelayer(): express.Express | null {
+  const secret = process.env.KINDPOOL_RELAYER_SECRET
+  if (!secret) {
+    console.warn('⚠️  KINDPOOL_RELAYER_SECRET not set — relayer disabled')
+    return null
+  }
+  relayerKeypair = Keypair.fromSecret(secret)
+  const kp = relayerKeypair
+  app.listen(PORT, () => {
+    console.log(`KindlePool Relayer running on port ${PORT}`)
+    console.log(`  Relayer address: ${kp.publicKey()}`)
+    console.log(`  RPC: ${config.rpcUrl}`)
+    console.log(`  Network: ${config.networkPassphrase}`)
+    console.log(`  Allowlist: ${config.allowlist ? config.allowlist.length + ' addresses' : 'disabled (allow all)'}`)
+  })
+  return app
+}
+
+if (require.main === module) {
+  startRelayer()
+}

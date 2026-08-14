@@ -42,7 +42,7 @@ function requireApiKey(req: express.Request, res: express.Response, next: expres
  * F-901: requires a signature proving ownership of `address` over
  * `challenge` (a nonce string the client chooses).
  */
-app.post('/api/v1/subscribe', (req, res) => {
+app.post('/api/v1/subscribe', async (req, res) => {
   const { email, address, challenge, signature, events } = req.body as {
     email?: string
     address?: string
@@ -58,7 +58,7 @@ app.post('/api/v1/subscribe', (req, res) => {
     res.status(403).json({ error: 'Signature does not prove ownership of address' })
     return
   }
-  upsertSubscription({
+  await upsertSubscription({
     address,
     email,
     events: events ?? ['deposit', 'goal_reached', 'work_submitted', 'vote_cast', 'pool_paid', 'pool_refunded'],
@@ -67,17 +67,17 @@ app.post('/api/v1/subscribe', (req, res) => {
   res.json({ success: true })
 })
 
-app.post('/api/v1/unsubscribe', (req, res) => {
+app.post('/api/v1/unsubscribe', async (req, res) => {
   const { address } = req.body as { address?: string }
   if (!address) {
     res.status(400).json({ error: 'Missing address' })
     return
   }
-  deleteSubscription(address)
+  await deleteSubscription(address)
   res.json({ success: true })
 })
 
-app.post('/api/v1/notify', requireApiKey, (req, res) => {
+app.post('/api/v1/notify', requireApiKey, async (req, res) => {
   const { address, eventType, poolTitle } = req.body as {
     address: string
     eventType: string
@@ -85,7 +85,7 @@ app.post('/api/v1/notify', requireApiKey, (req, res) => {
     amount?: string
   }
 
-  const sub = getSubscription(address)
+  const sub = await getSubscription(address)
   if (!sub) {
     res.json({ success: false, reason: 'not subscribed' })
     return
@@ -128,11 +128,18 @@ const emailBodies: Record<string, string> = {
   pool_expired: 'The pool "{{pool}}" has expired without reaching its goal. Funds have been refunded.',
 }
 
-app.get('/api/v1/health', (_req, res) => {
-  res.json({ status: 'ok', subscribers: countSubscriptions() })
+app.get('/api/v1/health', async (_req, res) => {
+  res.json({ status: 'ok', subscribers: await countSubscriptions() })
 })
 
-app.listen(PORT, () => {
-  console.log(`KindlePool Notifier running on port ${PORT}`)
-  if (!NOTIFIER_API_KEY) console.warn('WARNING: KINDPOOL_NOTIFIER_API_KEY not set — /notify disabled')
-})
+export function startNotifier(): express.Express {
+  app.listen(PORT, () => {
+    console.log(`KindlePool Notifier running on port ${PORT}`)
+    if (!NOTIFIER_API_KEY) console.warn('WARNING: KINDPOOL_NOTIFIER_API_KEY not set — /notify disabled')
+  })
+  return app
+}
+
+if (require.main === module) {
+  startNotifier()
+}

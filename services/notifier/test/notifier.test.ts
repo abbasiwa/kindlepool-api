@@ -38,18 +38,18 @@ describe('auth (F-901)', () => {
 })
 
 describe('store (F-902)', () => {
-  it('upserts, reads, and deletes subscriptions', () => {
+  it('upserts, reads, and deletes subscriptions', async () => {
     const addr = Keypair.random().publicKey()
-    store.upsertSubscription({ address: addr, email: 'a@b.com', events: ['deposit', 'pool_paid'] })
-    const sub = store.getSubscription(addr)
+    await store.upsertSubscription({ address: addr, email: 'a@b.com', events: ['deposit', 'pool_paid'] })
+    const sub = await store.getSubscription(addr)
     expect(sub?.email).toBe('a@b.com')
     expect(sub?.events).toEqual(['deposit', 'pool_paid'])
-    expect(store.countSubscriptions()).toBeGreaterThan(0)
+    expect(await store.countSubscriptions()).toBeGreaterThan(0)
 
-    store.upsertSubscription({ address: addr, email: 'new@b.com', events: ['deposit'] })
-    expect(store.getSubscription(addr)?.email).toBe('new@b.com')
+    await store.upsertSubscription({ address: addr, email: 'new@b.com', events: ['deposit'] })
+    expect((await store.getSubscription(addr))?.email).toBe('new@b.com')
 
-    store.deleteSubscription(addr)
-    expect(store.getSubscription(addr)).toBeUndefined()
+    await store.deleteSubscription(addr)
+    expect(await store.getSubscription(addr)).toBeUndefined()
   })
 })

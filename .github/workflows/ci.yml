@@ -64,6 +64,12 @@ jobs:
           npm install
           npx tsc --noEmit
 
+      - name: Unified backend typecheck
+        working-directory: api
+        run: |
+          npm install
+          npx tsc --noEmit
+
   # ── Test ──────────────────────────────────────────────────────
   test:
     name: Test
@@ -106,6 +112,12 @@ jobs:
         run: |
           npm install
           npm test
+
+      - name: Unified backend build
+        working-directory: api
+        run: |
+          npm install
+          npm run build
 
   # ── Build WASM ────────────────────────────────────────────────
   build-wasm:
