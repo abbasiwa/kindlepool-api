@@ -1,6 +1,6 @@
 {
   "name": "@mikwansa/kindlepool-sdk",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "TypeScript SDK for KindlePool — micro-sponsor pools on Stellar",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
