@@ -1,95 +1,73 @@
-# KindlePool
+# KindlePool — Backend
 
 **Fund the work, not the creator.**
 
 Micro-sponsor pools for creators. Supporters fund specific work, not creators. Money pools trustlessly on Stellar Soroban, releases to the creator only if quality thresholds are met, and automatically refunds supporters if the goal fails or work is rejected.
 
+## Repos
+
+- **`mikwansa/kindlepool-api`** — contract, SDK, unified backend, docs (this repo)
+- **`mikwansa/kindlepool-web`** — React/PWA frontend + widget
+
 ## Architecture
 
 ```
-┌─────────────────────┐
-│   Soroban Contract  │ ← Core pool logic (create, deposit, submit, vote, finalize)
-├─────────────────────┤
-│   Indexer + API     │ ← Off-chain event processing + REST API
-├─────────────────────┤
-│   Web App (PWA)     │ ← React front-end with wallet integration
-├─────────────────────┤
-│   AI Services       │ ← Recommendations, quality pre-check, trending
-└─────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│            Soroban Contract (SponsorPool)                    │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ RPC + events
+┌──────────────────────────────▼───────────────────────────────┐
+│   Unified backend (api/) — one process                       │
+│   :3001 indexer (REST + listener) · SQLite hot cache          │
+│   :3002 relayer (fee-bump)                                    │
+│   :3003 notifier (email)                                      │
+│   monitor (health/anomalies)                                  │
+│   MongoDB (persistent layer: users, subs, profiles, works)   │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                        Web App (Vercel)
 ```
+
+## Local dev (unified backend)
+
+```bash
+npm install            # root workspace (api + services)
+cp .env.example .env   # or api/.env.example
+npm run build
+npm start              # boots all services
+```
+
+Requires `KINDPOOL_CONTRACT_ID` to enable the event listener. MongoDB via `KINDPOOL_MONGO_URL` (Atlas or local `mongodb://localhost:27017/kindlepool`).
+
+## Deploy
+
+| Target | Config |
+|---|---|
+| **Heroku** | `Procfile` → `web: node api/dist/api/src/index.js` |
+| **Fly.io** | `fly.toml` (http_service :3001 + persistent volume) |
+| **Docker / compose** | `Dockerfile` + `docker-compose.yml` (backend + local mongo) |
 
 ## Smart Contract
 
 The contract is in `contracts/sponsor-pool/`.
 
-### Build
-
 ```bash
-cargo build -p sponsor-pool --target wasm32-unknown-unknown --release
+# Build (wasm32v1-none — the target used by CI and deploys)
+cargo build -p sponsor-pool --target wasm32v1-none --release
+
+# Test
+cargo test -p sponsor-pool --lib
+
+# Deploy (stellar CLI)
+stellar contract deploy --wasm target/wasm32v1-none/release/sponsor_pool.wasm \
+  --source-account deployer --network testnet
 ```
 
-### Test
+See `scripts/deploy.sh` and `docs/SPEC.md` for the contract ABI and audit details.
 
-```bash
-# Requires testutils feature for Soroban SDK
-cargo test -p sponsor-pool --features testutils
-```
+## SDK
 
-### Deploy
-
-```bash
-# Install soroban-cli first
-# Then:
-./scripts/deploy.sh testnet
-```
-
-### Contract Functions
-
-| Function | Description |
-|---|---|
-| `create(creator, goal, deadline, token, metadata_hash)` | Create a new funding pool |
-| `deposit(pool_id, supporter, amount)` | Fund a pool |
-| `submit_work(pool_id, work_hash)` | Creator submits work for review |
-| `vote(pool_id, voter, approve)` | Token-weighted quality vote |
-| `finalize(pool_id)` | Settle pool — payout or refund |
-| `get_pool(pool_id)` | View pool state |
-
-## Indexer + API
-
-The off-chain indexer is in `services/indexer/`.
-
-### Setup
-
-```bash
-cd services/indexer
-cp .env.example .env
-# Set KINDPOOL_CONTRACT_ID to your deployed contract address
-npm install
-```
-
-### Run
-
-```bash
-npm run dev        # Development with hot reload
-npm run build      # TypeScript build
-npm run start      # Production
-```
-
-### API Endpoints
-
-| Endpoint | Description |
-|---|---|
-| `GET /api/v1/pools` | List pools (status, creator, sort, pagination) |
-| `GET /api/v1/pools/:id` | Single pool detail |
-| `GET /api/v1/pools/:id/supporters` | Pool supporters list |
-| `GET /api/v1/pools/:id/events` | Pool event history |
-| `GET /api/v1/supporters/:address/pools` | Pools a supporter funded |
-| `GET /api/v1/creators/:address/pools` | Pools a creator created |
-| `GET /api/v1/events` | All events (filterable by type) |
-
-## Milestones
-
-See [milestone.md](milestone.md) for the full development roadmap (66 sub-milestones across 12 phases).
+`@mikwansa/kindlepool-sdk` is published to GitHub Packages (`npm.pkg.github.com`) and consumed by the web app.
 
 ## License
 

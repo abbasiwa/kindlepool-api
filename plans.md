@@ -281,19 +281,19 @@ Hub (`/c/:handle`) · single tag (`/c/:handle/:slug`) · embed generator · sign
 3. Wire SDK via GitHub-tarball
 4. Set up CI on both repos
 
-### Phase 1 — Web uses contracts (3–5 days)
+### Phase 1 — Web uses contracts (3–5 days) ✅ DONE (Phase 1)
 1. Add `@stellar/stellar-sdk` + `@mikwansa/kindlepool-sdk` to web
 2. New `lib/contract.ts`, `lib/relayer.ts`, `lib/sdk.ts`
 3. Wire every product flow → real contract call (create, deposit, vote, submit_work, finalize, cancel_pool, claim_refund, raise_dispute, resolve_dispute, appeal_dispute)
 4. Fix audit issues #6–#10, #14
 
-### Phase 2 — Unified backend + Mongoose (3–5 days)
+### Phase 2 — Unified backend + Mongoose (3–5 days) ✅ DONE (Phase 2)
 1. `api/` unified entrypoint boots all services + Express
 2. Mongoose models: User, Subscription, ApiKey, CreatorProfile, WorkEntry
 3. Move existing services into modules; SQLite stays as indexer hot cache
 
-### Phase 3 — Deploy readiness (2–3 days)
-Dockerfile · Procfile · fly.toml · docker-compose.yml · .env.example · GitHub Actions · pino logging · SIGTERM graceful shutdown · /health
+### Phase 3 — Deploy readiness (2–3 days) ✅ DONE (Phase 3)
+Dockerfile · Procfile · fly.toml · docker-compose.yml · root npm workspace · .env.example · GitHub Actions · pino logging · SIGTERM graceful shutdown · /health
 
 ### Phase 4 — Settings + Docs + SEO/Legal/Footer + Design system (4–6 days)
 - Settings page (§6.3)
