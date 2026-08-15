@@ -309,12 +309,12 @@ Dockerfile · Procfile · fly.toml · docker-compose.yml · root npm workspace �
 ### Phase 6 — Initial deploy (1 day) 🔄 IN PROGRESS (2026-08-15)
 1. Heroku Eco dyno (kindlepool-api) — **BLOCKED**: account requires verification (payment info) at https://heroku.com/verify
 2. MongoDB Atlas M0 → `KINDPOOL_MONGO_URL` — cluster `cluster0.cbeg1th.mongodb.net` provisioned (creds in backup)
-3. Vercel (kindlepool-web) — ✅ **LIVE** at https://kindlepool.vercel.app (deploy via git-less CLI dir; git author block worked around)
+3. Vercel (kindlepool-web) — ✅ **LIVE** at **https://kindlepool.app** (account: mikwansa / team `abba15`, project `kindlepool`, deployment `kindlepool-i35k0rsde-abba15`). Old `cocor` account site + domain deleted.
 4. Deploy contract to testnet → ✅ **v12 `CBLVO4HIYWJHV66YM4KMXNRBL6O4GMB6WNIWUT6M6MSWZLPWTMAYBLMX`** (initialized, flow 120/60/60)
-5. Domain `kindlepool.app` — attached + verified on project; DNS still needs registrar CNAME → `cname.vercel-dns.com`
+5. Domain `kindlepool.app` — ✅ attached + verified on `abba15` project; serves the production deployment (HTTP 200)
 6. Email: **Brevo SMTP** (replaces Resend) — connection verified
 
-**Open blockers**: (a) Heroku account verification (user action); (b) kindlepool.app DNS at registrar (user action); (c) Atlas Network Access allowlist for backend egress IP.
+**Open blockers**: (a) Heroku account verification (user action); (b) Atlas Network Access allowlist for backend egress IP.
 
 **Total: ~3–5 weeks.**
 
