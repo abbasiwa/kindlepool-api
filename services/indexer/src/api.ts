@@ -10,6 +10,10 @@ const app = express()
 // Heroku/Paas: prefer $PORT (assigned by the platform), then KINDPOOL_API_PORT, then 3001.
 const PORT = parseInt(process.env.PORT || process.env.KINDPOOL_API_PORT || '3001', 10)
 
+// Trust the first hop so express-rate-limit sees the real client IP from the
+// X-Forwarded-For header set by Heroku's proxy (ERR_ERL_UNEXPECTED_X_FORWARDED_FOR).
+app.set('trust proxy', 1)
+
 app.use(cors())
 app.use(express.json())
 
