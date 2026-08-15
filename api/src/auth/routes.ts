@@ -68,6 +68,25 @@ router.get('/me', authMiddleware, (req: AuthedRequest, res) => {
   res.json({ user: req.user })
 })
 
+// PATCH /api/v1/auth/me — update profile (displayName, bio, preferences)
+router.patch('/me', authMiddleware, asyncHandler(async (req: AuthedRequest, res) => {
+  const { displayName, bio, preferences } = req.body as {
+    displayName?: string
+    bio?: string
+    preferences?: Record<string, unknown>
+  }
+  const user = await UserModel.findById(req.user!.id)
+  if (!user) { res.status(404).json({ error: 'User not found' }); return }
+  if (typeof displayName === 'string' && displayName.length <= 60) user.displayName = displayName.trim()
+  if (typeof bio === 'string' && bio.length <= 500) user.bio = bio.trim()
+  if (preferences && typeof preferences === 'object') {
+    user.preferences = preferences
+  }
+  await user.save()
+  const { walletAddress, linkedWallets, displayName: dn, bio: b, email, preferences: prefs, id } = user as any
+  res.json({ success: true, user: { id: String(id), email, displayName: dn, bio: b, walletAddress, linkedWallets, preferences: prefs } })
+}))
+
 // POST /api/v1/auth/request-wallet-challenge — server-issued nonce
 router.post('/request-wallet-challenge', authMiddleware, asyncHandler(async (req: AuthedRequest, res) => {
   const user = await UserModel.findById(req.user!.id)

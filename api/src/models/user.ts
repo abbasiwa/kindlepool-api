@@ -8,6 +8,8 @@ const userSchema = new Schema(
     bio: { type: String, default: '', maxlength: 500 },
     avatarUrl: { type: String, default: '' },
     slug: { type: String, default: '' },
+    // Notification/UI preferences
+    preferences: { type: Schema.Types.Mixed, default: {} },
     // Primary Stellar address linked in Settings (wallet-link)
     walletAddress: { type: String, default: null },
     // walletAddress(es) linked but not primary

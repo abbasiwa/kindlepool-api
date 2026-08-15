@@ -51,4 +51,25 @@ describe('auth routes (mounted on indexer app)', () => {
     expect(res.status).toBe(200)
     expect(res.body.user.email).toBe('route@test.com')
   })
+
+  it('PATCH /auth/me updates profile and preferences', async () => {
+    const user = await mongoose.connection.collection('users').findOne({ email: 'route@test.com' })
+    const id = String(user?._id)
+    const { signSession } = await import('../src/auth/jwt')
+    const token = signSession({ sub: id, email: 'route@test.com' })
+    const res = await request(app)
+      .patch('/api/v1/auth/me')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ displayName: 'Alice', bio: 'Creator', preferences: { deposit: false } })
+    expect(res.status).toBe(200)
+    expect(res.body.success).toBe(true)
+    expect(res.body.user.displayName).toBe('Alice')
+    expect(res.body.user.bio).toBe('Creator')
+    expect(res.body.user.preferences.deposit).toBe(false)
+  })
+
+  it('PATCH /auth/me without a token returns 401', async () => {
+    const res = await request(app).patch('/api/v1/auth/me').send({ displayName: 'x' })
+    expect(res.status).toBe(401)
+  })
 })
