@@ -7,7 +7,7 @@ import {
 import "./chunk-WBQAMGXK.mjs";
 
 // src/index.ts
-var VERSION = "0.1.2";
+var VERSION = "0.2.0";
 export {
   KindlePoolAPI,
   KindlePoolContract,

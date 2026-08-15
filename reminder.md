@@ -1,6 +1,6 @@
 # KindlePool — Remaining Work & Server-Deletion Checklist
 
-Last updated: 2026-08-14 · Repo: `mikwansa/kindlepool-api` (split from `abbasiwa/kindlepool`, Phase 0) · Frontend: `mikwansa/kindlepool-web`
+Last updated: 2026-08-14 · Repo: `abbasiwa/kindlepool-api` (split from `abbasiwa/kindlepool`, Phase 0) · Frontend: `abbasiwa/kindlepool-web`
 
 ---
 

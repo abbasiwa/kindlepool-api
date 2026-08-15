@@ -246,7 +246,7 @@ var KindlePoolContract = class {
 };
 
 // src/index.ts
-var VERSION = "0.1.2";
+var VERSION = "0.2.0";
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   KindlePoolAPI,

@@ -6,7 +6,7 @@ KindlePool lets supporters fund specific pieces of creative work — a video, a 
 
 This repository contains the smart contract, the backend services, the TypeScript SDK, and the docs that power [kindlepool.app](https://kindlepool.app).
 
-> The web frontend lives in [`mikwansa/kindlepool-web`](https://github.com/mikwansa/kindlepool-web).
+> The web frontend lives in [`abbasiwa/kindlepool-web`](https://github.com/abbasiwa/kindlepool-web).
 
 ---
 
@@ -36,7 +36,7 @@ This repository contains the smart contract, the backend services, the TypeScrip
 ```
 api/                    # unified backend entrypoint + auth + models
 contracts/sponsor-pool/ # Soroban Rust contract
-packages/sdk/           # @mikwansa/kindlepool-sdk (GitHub Packages)
+packages/sdk/           # @abbasiwa/kindlepool-sdk (GitHub Packages)
 services/               # indexer, relayer, notifier, monitor
 scripts/                # deploy + verification tooling
 docs/                   # spec, audit, known-issues, legal
@@ -75,11 +75,11 @@ cargo test  -p sponsor-pool --lib
 The SDK is published to GitHub Packages and installed via `.npmrc`:
 
 ```
-@mikwansa:registry=https://npm.pkg.github.com
+@abbasiwa:registry=https://npm.pkg.github.com
 ```
 
 ```ts
-import { KindlePoolContract, KindlePoolAPI } from '@mikwansa/kindlepool-sdk'
+import { KindlePoolContract, KindlePoolAPI } from '@abbasiwa/kindlepool-sdk'
 ```
 
 ---

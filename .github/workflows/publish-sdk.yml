@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://npm.pkg.github.com'
-          scope: '@mikwansa'
+          scope: '@abbasiwa'
       - name: Install deps
         run: npm install
       - name: Build
