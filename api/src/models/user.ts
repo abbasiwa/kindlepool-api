@@ -7,8 +7,6 @@ const userSchema = new Schema(
     displayName: { type: String, default: '' },
     bio: { type: String, default: '', maxlength: 500 },
     avatarUrl: { type: String, default: '' },
-    // Unique public slug — only set when provided (sparse index avoids '' collisions).
-    slug: { type: String, default: null },
     // Notification/UI preferences
     preferences: { type: Schema.Types.Mixed, default: {} },
     // Primary Stellar address linked in Settings (wallet-link)
@@ -29,7 +27,6 @@ const userSchema = new Schema(
   { timestamps: true },
 )
 
-userSchema.index({ slug: 1 }, { unique: true, sparse: true })
 userSchema.index({ magicLinkToken: 1 }, { sparse: true })
 
 export type UserDoc = InferSchemaType<typeof userSchema>
