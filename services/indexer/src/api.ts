@@ -7,7 +7,8 @@ import type { PoolListQuery } from './types'
 import { ApiKeyTier, bootstrapDevKey, createApiKey, listApiKeys, lookupApiKey, revokeApiKeyByName } from './keys'
 
 const app = express()
-const PORT = parseInt(process.env.KINDPOOL_API_PORT ?? '3001', 10)
+// Heroku/Paas: prefer $PORT (assigned by the platform), then KINDPOOL_API_PORT, then 3001.
+const PORT = parseInt(process.env.PORT || process.env.KINDPOOL_API_PORT || '3001', 10)
 
 app.use(cors())
 app.use(express.json())
