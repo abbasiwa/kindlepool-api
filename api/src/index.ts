@@ -1,12 +1,6 @@
 import { connectMongo } from './db/connection'
 import logger from './lib/logger'
 import { authRouter } from './auth'
-
-// Service entrypoints (refactored in Phase 2 to be importable)
-import { startIndexer } from '../../services/indexer/src/index'
-import { startRelayer } from '../../services/relayer/src/index'
-import { startNotifier } from '../../services/notifier/src/index'
-import { startMonitor } from '../../services/monitor/src/index'
 import { app as indexerApp } from '../../services/indexer/src/api'
 
 const ENABLE_RELAYER = process.env.KINDPOOL_ENABLE_RELAYER !== 'false'
@@ -20,23 +14,34 @@ async function main() {
   await connectMongo()
 
   // Mount auth routes on the public indexer API before it starts listening.
-  // The indexer's API-key gate exempts /api/v1/auth/* (JWT auth instead).
   indexerApp.use('/api/v1/auth', authRouter)
 
   // Indexer: REST API (3001) + Soroban event listener. Always on.
+  const { startIndexer } = await import('../../services/indexer/src/index')
   startIndexer()
 
-  // Relayer: gasless tx fee-bump (3002). On unless disabled.
-  if (ENABLE_RELAYER) startRelayer()
-  else logger.warn('relayer disabled (KINDPOOL_ENABLE_RELAYER=false)')
+  // Relayer / notifier / monitor are lazy-loaded so disabled services never
+  // pull their heavy dependencies into memory (keeps the dyno footprint low).
+  if (ENABLE_RELAYER) {
+    const { startRelayer } = await import('../../services/relayer/src/index')
+    startRelayer()
+  } else {
+    logger.warn('relayer disabled (KINDPOOL_ENABLE_RELAYER=false)')
+  }
 
-  // Notifier: email notifications (3003). On unless disabled.
-  if (ENABLE_NOTIFIER) startNotifier()
-  else logger.warn('notifier disabled (KINDPOOL_ENABLE_NOTIFIER=false)')
+  if (ENABLE_NOTIFIER) {
+    const { startNotifier } = await import('../../services/notifier/src/index')
+    startNotifier()
+  } else {
+    logger.warn('notifier disabled (KINDPOOL_ENABLE_NOTIFIER=false)')
+  }
 
-  // Monitor: health/anomaly checks (no HTTP). On unless disabled.
-  if (ENABLE_MONITOR) startMonitor()
-  else logger.warn('monitor disabled (KINDPOOL_ENABLE_MONITOR=false)')
+  if (ENABLE_MONITOR) {
+    const { startMonitor } = await import('../../services/monitor/src/index')
+    startMonitor()
+  } else {
+    logger.warn('monitor disabled (KINDPOOL_ENABLE_MONITOR=false)')
+  }
 
   const shutdown = (signal: string) => {
     logger.info({ signal }, 'shutting down')
