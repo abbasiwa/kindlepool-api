@@ -14,11 +14,20 @@ const userSchema = new Schema(
     linkedWallets: { type: [String], default: [] },
     lastLoginAt: { type: Date, default: null },
     deletedAt: { type: Date, default: null },
+    // Magic-link authentication
+    magicLinkToken: { type: String, default: null },
+    magicLinkExpiresAt: { type: Date, default: null },
+    // Wallet-link challenge (one-time nonce, 5-min expiry)
+    walletChallenge: { type: String, default: null },
+    walletChallengeExpiresAt: { type: Date, default: null },
+    // Sessions (session tokens, last-24 revoked)
+    sessionTokens: { type: [String], default: [] },
   },
   { timestamps: true },
 )
 
 userSchema.index({ slug: 1 }, { unique: true, sparse: true })
+userSchema.index({ magicLinkToken: 1 }, { sparse: true })
 
 export type UserDoc = InferSchemaType<typeof userSchema>
 

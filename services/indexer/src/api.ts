@@ -39,6 +39,8 @@ const keyLimiter = rateLimit({
 })
 
 function authMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  // Auth routes use their own JWT auth — exempt from the API-key gate.
+  if (req.path.startsWith('/api/v1/auth')) return next()
   const apiKey = req.headers['x-api-key'] as string | undefined
   if (!apiKey) {
     // Allow unauthenticated access to public endpoints (GET /pools, /health)

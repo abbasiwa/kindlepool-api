@@ -323,6 +323,7 @@ pub struct PoolCancelledEvent {
 #[derive(Clone, Debug)]
 pub struct DisputeRaisedEvent {
     pub pool_id: u32,
+    pub dispute_id: u32,
     pub raised_by: Address,
     pub reason: u32,
     pub fee: i128,

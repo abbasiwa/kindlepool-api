@@ -772,6 +772,7 @@ pub fn raise_dispute(
         (TOPIC_DISPUTE_RAISED,),
         DisputeRaisedEvent {
             pool_id,
+            dispute_id: id,
             raised_by: disputant.clone(),
             reason,
             fee,

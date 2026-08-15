@@ -1,11 +1,13 @@
 import { connectMongo } from './db/connection'
 import logger from './lib/logger'
+import { authRouter } from './auth'
 
 // Service entrypoints (refactored in Phase 2 to be importable)
 import { startIndexer } from '../../services/indexer/src/index'
 import { startRelayer } from '../../services/relayer/src/index'
 import { startNotifier } from '../../services/notifier/src/index'
 import { startMonitor } from '../../services/monitor/src/index'
+import { app as indexerApp } from '../../services/indexer/src/api'
 
 const ENABLE_RELAYER = process.env.KINDPOOL_ENABLE_RELAYER !== 'false'
 const ENABLE_NOTIFIER = process.env.KINDPOOL_ENABLE_NOTIFIER !== 'false'
@@ -16,6 +18,10 @@ async function main() {
 
   // Persistent state (users, subscriptions, api keys, profiles, works).
   await connectMongo()
+
+  // Mount auth routes on the public indexer API before it starts listening.
+  // The indexer's API-key gate exempts /api/v1/auth/* (JWT auth instead).
+  indexerApp.use('/api/v1/auth', authRouter)
 
   // Indexer: REST API (3001) + Soroban event listener. Always on.
   startIndexer()
