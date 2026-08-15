@@ -5,6 +5,7 @@ const SMTP_HOST = process.env.BREVO_SMTP_HOST ?? 'smtp-relay.brevo.com'
 const SMTP_PORT = parseInt(process.env.BREVO_SMTP_PORT ?? '587', 10)
 const SMTP_USER = process.env.BREVO_SMTP_USER
 const SMTP_KEY = process.env.BREVO_SMTP_KEY
+const FROM_EMAIL = process.env.BREVO_FROM_EMAIL ?? 'no-reply@kindlepool.app'
 const APP_URL = process.env.KINDPOOL_APP_URL ?? 'http://localhost:5173'
 const MAGIC_TTL_MS = 10 * 60 * 1000 // 10 minutes
 
@@ -43,7 +44,7 @@ export async function sendMagicLinkEmail(email: string, token: string): Promise<
   }
   try {
     await mail.sendMail({
-      from: SMTP_USER,
+      from: `"KindlePool" <${FROM_EMAIL}>`,
       to: email,
       subject: 'Your KindlePool login link',
       text: `Click below to sign in to KindlePool:\n\n${url}\n\nThis link expires in 10 minutes.`,
