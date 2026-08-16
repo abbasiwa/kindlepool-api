@@ -39,7 +39,7 @@ contracts/sponsor-pool/ # Soroban Rust contract
 packages/sdk/           # @abbasiwa/kindlepool-sdk (GitHub Packages)
 services/               # indexer, relayer, notifier, monitor
 scripts/                # deploy + verification tooling
-docs/                   # spec, audit, known-issues, legal
+docs/                   # legal + security disclosure
 tests/live/             # live testnet integration suite
 Dockerfile · Procfile · fly.toml · docker-compose.yml
 ```
@@ -120,11 +120,8 @@ There is also a live testnet integration suite in [`tests/live/`](tests/live/).
 
 ## Documentation
 
-- [`docs/SPEC.md`](docs/SPEC.md) — contract specification
-- [`docs/known-issues.md`](docs/known-issues.md) — issue ledger
-- [`docs/audit/report-v1.md`](docs/audit/report-v1.md) — internal audit
-- [`docs/BOUNTY.md`](docs/BOUNTY.md) — bug bounty program
 - [`docs/SECURITY.md`](docs/SECURITY.md) — security disclosure
+- [`docs/BOUNTY.md`](docs/BOUNTY.md) — bug bounty program
 - [`docs/TERMS.md`](docs/TERMS.md) · [`docs/PRIVACY.md`](docs/PRIVACY.md) — legal
 
 ---

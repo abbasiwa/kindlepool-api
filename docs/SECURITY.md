@@ -1,98 +1,30 @@
-# Security Audit Framework
+# Security at KindlePool
 
-## Audit Scope
+KindlePool keeps creator funding safe and simple. This page explains how, in plain terms.
 
-The following components are in scope for external security audit:
+## Trustless by design
 
-### 1. Soroban Smart Contract (`contracts/sponsor-pool/`)
+Pools live on the Stellar blockchain in a smart contract. The platform never holds your funds in a wallet it controls — money is locked in the contract and released only according to rules that anyone can verify.
 
-**Critical paths:**
-- `deposit()` — token transfer and accounting
-- `finalize()` — payout and refund logic, pro-rata distribution
-- `vote()` — token-weighted voting, double-vote prevention
-- `raise_dispute()` — fee collection, dispute creation
-- `close_dispute()` — vote tallying, payout execution, fee return
-- `submit_work()` — access control, state transition
+## How funds are protected
 
-**Invariants to verify:**
-- Total deposited tokens always equal sum of supporter balances
-- Pool status transitions follow correct order (Open → AwaitingVote → Paid/Expired/Disputed)
-- No double-finalize, no double-vote, no double-withdraw
-- Pro-rata refunds distribute exactly the pool balance
-- Dispute fee returned to winner, not lost or duplicated
+- **Escrowed funds** — supporter deposits are held by the smart contract, not by the platform.
+- **Automatic refunds** — if a pool's goal is not met, or the work is rejected by supporters, the contract returns funds automatically.
+- **Community checks** — supporters vote on whether delivered work meets expectations before payment is released.
+- **Creator limits** — a creator cannot approve their own work, so no one can self-deal.
 
-### 2. Indexer + API (`services/indexer/`)
+## Your account
 
-- API key authentication bypass
-- Rate limiting effectiveness
-- SQL injection in query parameters
-- Webhook HMAC signature verification
+Signing in uses email magic links — no passwords are stored. You can optionally link a Stellar wallet in Settings to view your pool activity; wallet linking is never used as your login.
 
-### 3. Relayer (`services/relayer/`)
+## Reporting a vulnerability
 
-- Fee-bump transaction validation
-- Relayer key protection
-- Spam prevention
+We take security seriously. If you believe you have found an issue, please report it privately rather than posting it publicly:
 
-### 4. Front-end (`web/`)
+- Email: **security@kindlepool.app**
+- Describe what you found, how to reproduce it, and the potential impact
+- We aim to acknowledge reports within 48 hours and to fix critical issues promptly
 
-- Wallet integration (Freighter message signing)
-- IPFS upload security
-- XSS prevention in pool metadata
+## Bug bounty
 
----
-
-## Audit Firms
-
-Recommended Soroban/Stellar-specialized auditors:
-
-| Firm | Specialty | Contact |
-|---|---|---|
-| **OtterSec** | Soroban, Solana, Rust | https://osec.io |
-| **Cantina** | Stellar, Soroban, audit competitions | https://cantina.xyz |
-| **Trail of Bits** | Rust, smart contracts | https://trailofbits.com |
-| **Halborn** | Blockchain, DeFi | https://halborn.com |
-
----
-
-## Pre-Audit Checklist
-
-- [ ] All functions have complete test coverage (>90%)
-- [ ] Property-based tests for settlement math
-- [ ] Fuzz testing for all public entry points
-- [ ] Static analysis with `cargo audit` (dependency vulnerabilities)
-- [ ] `cargo clippy` with zero warnings
-- [ ] All TODO/FIXME comments resolved
-- [ ] Documentation of each public function's pre/post conditions
-- [ ] Formal specification of state machine (status transitions)
-- [ ] Gas/storage cost analysis for all functions
-- [ ] Mainnet deploy simulation on testnet-first
-
----
-
-## Timeline
-
-```
-Week 1-2:  Internal review + static analysis
-Week 3-4:  External audit (parallel with fix window)
-Week 5:    Fix all Critical/High findings
-Week 6:    Re-audit + sign-off
-```
-
----
-
-## Responsible Disclosure Policy
-
-If you find a vulnerability:
-
-1. **Do NOT** post it publicly or exploit it
-2. Email: `security@kindlepool.dev`
-3. Include: description, steps to reproduce, impact, suggested fix
-4. Expect acknowledgment within 48 hours
-5. We commit to fixing Critical issues within 7 days
-
----
-
-## Bug Bounty
-
-See [BOUNTY.md](BOUNTY.md) for rewards and scope.
+See our [Bug Bounty Program](/legal/bounty) for scope and rewards.
